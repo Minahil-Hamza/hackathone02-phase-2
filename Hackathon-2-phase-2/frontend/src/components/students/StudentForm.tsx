@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useFormState } from "react-dom";
@@ -15,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User, Mail, Calendar, Loader2 } from "lucide-react";
 
 const StudentFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -34,7 +33,7 @@ export function StudentForm({
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [state, formAction] = useFormState(action, { message: null, errors: {} });
+  const [state, formAction, isPending] = useFormState(action, { message: null, errors: {} });
 
   const {
     register,
@@ -50,14 +49,15 @@ export function StudentForm({
   });
 
   useEffect(() => {
-    if (state.message && !state.errors) {
+    if (state.message && state.success) {
       toast({
         title: "Success",
         description: state.message,
       });
       router.push("/students");
+      router.refresh();
     } else if (state.message && state.errors) {
-       toast({
+      toast({
         variant: "destructive",
         title: "Error",
         description: state.message,
@@ -68,28 +68,39 @@ export function StudentForm({
   const formErrors = state.errors || errors;
 
   return (
-    <div className="max-w-2xl mx-auto">
-       <div className="mb-4">
-        <Button variant="outline" size="sm" asChild>
-            <Link href="/students">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Students
-            </Link>
+    <div className="max-w-2xl mx-auto animate-fade-in-up">
+      <div className="mb-6">
+        <Button variant="ghost" size="sm" asChild className="rounded-lg hover:bg-muted">
+          <Link href="/students">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Students
+          </Link>
         </Button>
-       </div>
+      </div>
+
       <form action={formAction}>
-        <Card>
-          <CardHeader>
-            <CardTitle>{student ? "Edit Student" : "Add New Student"}</CardTitle>
+        <Card className="rounded-2xl shadow-lg border-0">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl">
+              {student ? "Edit Student" : "Add New Student"}
+            </CardTitle>
             <CardDescription>
-              {student ? "Update the student's details below." : "Fill in the details to add a new student."}
+              {student
+                ? "Update the student's information below."
+                : "Fill in the details to register a new student."}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+
+          <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                Full Name
+              </Label>
               <Input
                 id="name"
+                placeholder="Enter student's full name"
+                className="rounded-lg h-11"
                 {...register("name")}
                 aria-invalid={!!formErrors.name}
               />
@@ -97,11 +108,17 @@ export function StudentForm({
                 <p className="text-sm text-destructive">{formErrors.name[0]}</p>
               )}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                Email Address
+              </Label>
               <Input
                 id="email"
                 type="email"
+                placeholder="student@example.com"
+                className="rounded-lg h-11"
                 {...register("email")}
                 aria-invalid={!!formErrors.email}
               />
@@ -109,11 +126,17 @@ export function StudentForm({
                 <p className="text-sm text-destructive">{formErrors.email[0]}</p>
               )}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="age">Age</Label>
+              <Label htmlFor="age" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                Age
+              </Label>
               <Input
                 id="age"
                 type="number"
+                placeholder="Enter student's age"
+                className="rounded-lg h-11"
                 {...register("age")}
                 aria-invalid={!!formErrors.age}
               />
@@ -122,9 +145,24 @@ export function StudentForm({
               )}
             </div>
           </CardContent>
-          <CardFooter>
-            <Button type="submit">
-              {student ? "Update Student" : "Create Student"}
+
+          <CardFooter className="flex gap-3 pt-4">
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="rounded-lg shadow-lg shadow-primary/20"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {student ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                student ? "Update Student" : "Create Student"
+              )}
+            </Button>
+            <Button type="button" variant="outline" className="rounded-lg" asChild>
+              <Link href="/students">Cancel</Link>
             </Button>
           </CardFooter>
         </Card>

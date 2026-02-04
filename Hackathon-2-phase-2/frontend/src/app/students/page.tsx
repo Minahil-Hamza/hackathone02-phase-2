@@ -5,7 +5,7 @@ import { StudentsClientPage } from "@/components/students/StudentsClientPage";
 import { TableSkeleton } from "@/components/students/TableSkeleton";
 
 export const metadata = {
-  title: "Students | StudentVerse",
+  title: "Students | EduTrack",
 };
 
 async function StudentsList() {

@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'StudentVerse',
+  title: 'EduTrack',
   description: 'A modern Student Management System.',
 };
 

@@ -5,11 +5,11 @@ import { getStudentById } from "@/lib/api";
 import { notFound } from "next/navigation";
 
 export const metadata = {
-    title: "Edit Student | StudentVerse",
+    title: "Edit Student | EduTrack",
 };
 
-export default async function EditStudentPage({ params }: { params: { id: string } }) {
-  const id = params.id;
+export default async function EditStudentPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const student = await getStudentById(id);
 
   if (!student) {
