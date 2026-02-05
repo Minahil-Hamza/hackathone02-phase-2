@@ -18,9 +18,7 @@ async def create_task(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """
-    Create a new task for the current user.
-    """
+    """Create a new task for the current user."""
     task_repository = TaskRepository(session)
     task = await task_repository.create_task(task_create, current_user.id)
     return task
@@ -31,12 +29,21 @@ async def get_tasks(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """
-    Get all tasks for the current user.
-    """
+    """Get all tasks for the current user."""
     task_repository = TaskRepository(session)
     tasks = await task_repository.get_user_tasks(current_user.id)
     return tasks
+
+
+@router.get("/stats")
+async def get_task_stats(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Get task statistics for the current user."""
+    task_repository = TaskRepository(session)
+    stats = await task_repository.get_user_stats(current_user.id)
+    return stats
 
 
 @router.get("/{task_id}", response_model=TaskRead)
@@ -45,9 +52,7 @@ async def get_task(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """
-    Get a specific task by ID.
-    """
+    """Get a specific task by ID."""
     task_repository = TaskRepository(session)
     task = await task_repository.get_task_by_id(task_id, current_user.id)
 
@@ -67,9 +72,7 @@ async def update_task(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """
-    Update a task.
-    """
+    """Update a task."""
     task_repository = TaskRepository(session)
     task = await task_repository.update_task(task_id, current_user.id, task_update)
 
@@ -88,9 +91,7 @@ async def delete_task(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    """
-    Delete a task.
-    """
+    """Delete a task."""
     task_repository = TaskRepository(session)
     deleted = await task_repository.delete_task(task_id, current_user.id)
 
@@ -101,3 +102,14 @@ async def delete_task(
         )
 
     return None
+
+
+@router.delete("/", status_code=status.HTTP_200_OK)
+async def delete_all_tasks(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Delete all tasks for the current user."""
+    task_repository = TaskRepository(session)
+    count = await task_repository.delete_all_tasks(current_user.id)
+    return {"message": f"Deleted {count} tasks", "count": count}

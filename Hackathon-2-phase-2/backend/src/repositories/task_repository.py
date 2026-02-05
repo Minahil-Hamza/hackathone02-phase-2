@@ -1,7 +1,8 @@
 """Task repository for database operations."""
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy import select
+from datetime import datetime
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.task import Task, TaskCreate, TaskUpdate
 
@@ -19,6 +20,9 @@ class TaskRepository:
             title=task_create.title,
             description=task_create.description,
             completed=False,
+            priority=task_create.priority or "medium",
+            category=task_create.category or "personal",
+            due_date=task_create.due_date,
         )
         self.session.add(task)
         await self.session.commit()
@@ -41,6 +45,25 @@ class TaskRepository:
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
+    async def get_user_stats(self, user_id: UUID) -> dict:
+        """Get task statistics for a user."""
+        total_stmt = select(func.count()).where(Task.user_id == user_id)
+        completed_stmt = select(func.count()).where(
+            Task.user_id == user_id, Task.completed == True
+        )
+
+        total_result = await self.session.execute(total_stmt)
+        completed_result = await self.session.execute(completed_stmt)
+
+        total = total_result.scalar() or 0
+        completed = completed_result.scalar() or 0
+
+        return {
+            "total": total,
+            "completed": completed,
+            "pending": total - completed,
+        }
+
     async def update_task(
         self, task_id: UUID, user_id: UUID, task_update: TaskUpdate
     ) -> Optional[Task]:
@@ -49,13 +72,20 @@ class TaskRepository:
         if not task:
             return None
 
-        # Update fields that are provided
         if task_update.title is not None:
             task.title = task_update.title
         if task_update.description is not None:
             task.description = task_update.description
         if task_update.completed is not None:
             task.completed = task_update.completed
+        if task_update.priority is not None:
+            task.priority = task_update.priority
+        if task_update.category is not None:
+            task.category = task_update.category
+        if task_update.due_date is not None:
+            task.due_date = task_update.due_date
+
+        task.updated_at = datetime.utcnow()
 
         await self.session.commit()
         await self.session.refresh(task)
@@ -70,3 +100,14 @@ class TaskRepository:
         await self.session.delete(task)
         await self.session.commit()
         return True
+
+    async def delete_all_tasks(self, user_id: UUID) -> int:
+        """Delete all tasks for a user."""
+        statement = select(Task).where(Task.user_id == user_id)
+        result = await self.session.execute(statement)
+        tasks = list(result.scalars().all())
+        count = len(tasks)
+        for task in tasks:
+            await self.session.delete(task)
+        await self.session.commit()
+        return count
