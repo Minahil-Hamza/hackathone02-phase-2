@@ -2,6 +2,9 @@
 
 A secure, full-stack todo application with user authentication and task management.
 
+API ENDPOINT
+http://localhost:8000/docs#/default/health_check_health_get
+
 ## Architecture
 
 **Monorepo Structure**:
